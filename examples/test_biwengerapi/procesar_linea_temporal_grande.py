@@ -1,23 +1,17 @@
 import biwengerapi.movimientos as movs
 
-texto = open('../jugador_a_jugador/jugador_a_jugador.html', 'r', encoding='UTF8')
-a, b = movs.jugador_a_jugador(texto)
-print(a)
-print(b)
+html = open('ejemplo_basico.html', 'r', encoding='UTF8')
+html_txt = html.read()
 
-print('-------------')
+movis = movs.procesar_html_con_movimientos(html_txt=html_txt)
+print('\nEjemplo basico:\n')
+for mov in movis:
+    print(mov)
 
-texto = open('../jugador_a_mercado/jugador_a_mercado.html', 'r', encoding='UTF8')
-print(movs.jugador_a_mercado(texto))
+html = open('linea_temporal_1_semana.html', 'r', encoding='UTF8')
+html_txt = html.read()
 
-print('-------------')
-
-texto = open('../mercado_a_jugador/mercado_a_jugador.html', 'r', encoding='UTF8')
-print(movs.mercado_a_jugador(texto))
-
-print('-------------')
-
-texto = open('../intercambio/intercambio_doble.html', 'r', encoding='UTF8')
-a, b = movs.intercambio(texto)
-print(a)
-print(b)
+movis = movs.procesar_html_con_movimientos(html_txt=html_txt)
+print('\nEjemplo 1 semana:\n')
+for mov in movis:
+    print(mov)
