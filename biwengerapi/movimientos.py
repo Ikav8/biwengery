@@ -58,4 +58,29 @@ def mercado_a_jugador(texto):
     return (movimiento_jugador_1)
 
 def intercambio(texto):
-    pass
+    bs = bs4.BeautifulSoup(texto, 'html.parser')
+    offer_exchange_card = bs.find('offer-exchange-card')
+    jugador_1 = offer_exchange_card.find_all('user-link')[0].text.strip()
+    jugador_2 = offer_exchange_card.find_all('user-link')[1].text.strip()
+    tds = offer_exchange_card.find_all(style="width: 40%")
+    divs_jugador_1 = tds[0].find_all('div')
+    aportacion_jugador_1 = 0
+    for gasto in divs_jugador_1:
+        aportacion_jugador_1 += int(gasto.text.replace(u'\xa0', u' ').split(' ')[0].replace('.', ''))
+
+    divs_jugador_2 = tds[1].find_all('div')
+    aportacion_jugador_2 = 0
+    for gasto in divs_jugador_2:
+        aportacion_jugador_2 += int(gasto.text.replace(u'\xa0', u' ').split(' ')[0].replace('.', ''))
+
+    balance_jugador_1 = aportacion_jugador_2 - aportacion_jugador_1
+    balance_jugador_2 = aportacion_jugador_1 - aportacion_jugador_2
+
+    texto_intercambio_1 = ' + '.join(list(filter(None, tds[0].text.replace(u'\xa0', u' ').strip().split('\n'))))
+    texto_intercambio_2 = ' + '.join(list(filter(None, tds[1].text.replace(u'\xa0', u' ').strip().split('\n'))))
+
+    detalles = "Intercambio: [" + jugador_1 + " <> " + jugador_2 + "] - (" + texto_intercambio_1 + " <> " + texto_intercambio_2 + ")"
+
+    movimiento_jugador_1 = movimiento(jugador=jugador_1, balance=balance_jugador_1, detalles=detalles)
+    movimiento_jugador_2 = movimiento(jugador=jugador_2, balance=balance_jugador_2, detalles=detalles)
+    return(movimiento_jugador_1, movimiento_jugador_2)
