@@ -7,7 +7,7 @@ class movimiento:
         self.detalles = detalles
 
     def __str__(self):
-        signo = '+' if self.balance > 0 else '-'
+        signo = '+' if int(self.balance) > 0 else '-'
         return("[" + signo + "] " + self.jugador + " [ " + str(self.balance) + " ] (" + self.detalles + ").")
 
     def __repr__(self):
@@ -27,6 +27,22 @@ def procesar_html_con_movimientos(html_txt):
     intercambios = bs.find_all('offer-exchange-card')
     for offer_exchange_card in intercambios:
         movimientos = movimientos + intercambio(offer_exchange_card=offer_exchange_card)
+
+    jornadas = bs.find_all(class_="roundFinished")
+    for jornada in jornadas:
+        movimientos = movimientos + procesar_resultados_jornada(roundFinished=jornada)
+    return movimientos
+
+def procesar_resultados_jornada(roundFinished):
+    roundFinished_txt = roundFinished.text
+    lis = roundFinished.find_all('li')
+    jornada = 'Jornada ' + roundFinished.find('h3').text.split(' ')[-1]
+    movimientos = []
+    for li in lis:
+        jugador = li.find('user-link').text
+        balance = li.find('increment').text.strip().replace(u'\xa0', u' ').split(' ')[0].replace('.', '')
+        detalles = jornada + ' - ' + li.text
+        movimientos.append(movimiento(jugador=jugador, balance=balance, detalles=detalles))
     return movimientos
 
 def procesar_fichaje_o_venta(player_card):
@@ -34,6 +50,8 @@ def procesar_fichaje_o_venta(player_card):
     movimientos = []
     if '€' not in player_card_txt:
         return False
+    elif 'ha pagado la' in player_card_txt: # jugador a jugador (clausula)
+        movimientos = movimientos + jugador_a_jugador_clausula(player_card)
     elif len(player_card.find_all('user-link')) == 2:  # jugador a jugador
         movimientos = movimientos + jugador_a_jugador(player_card)
     elif 'Vendido por' in player_card_txt:  # jugador a mercado
@@ -53,6 +71,20 @@ def jugador_a_jugador(player_tag):
     equipo = player_tag.find('a')['title'].strip()
     de = dynamic_expression_container.find_all('user-link')[0].text.strip()
     para = dynamic_expression_container.find_all('user-link')[1].text.strip()
+    detalles = equipo + " - " + jugador + "(" + posicion + "): " + de + " -> " + para + " (" + precio_txt + ")"
+    movimiento_jugador_1 = movimiento(jugador=de, balance=precio, detalles=detalles)
+    movimiento_jugador_2 = movimiento(jugador=para, balance=-precio, detalles=detalles)
+    return ([movimiento_jugador_1, movimiento_jugador_2])
+
+def jugador_a_jugador_clausula(player_tag):
+    dynamic_expression_container = player_tag.find('dynamic-expression-container')
+    posicion = player_tag.find('player-position').text.strip()
+    jugador = player_tag.find('span').text.strip()
+    precio_txt = player_tag.find('strong').text.replace(u'\xa0', u' ')
+    precio = int(precio_txt.split(' ')[0].replace('.', ''))
+    equipo = player_tag.find('a')['title'].strip()
+    de = dynamic_expression_container.find_all('user-link')[1].text.strip()
+    para = dynamic_expression_container.find_all('user-link')[0].text.strip()
     detalles = equipo + " - " + jugador + "(" + posicion + "): " + de + " -> " + para + " (" + precio_txt + ")"
     movimiento_jugador_1 = movimiento(jugador=de, balance=precio, detalles=detalles)
     movimiento_jugador_2 = movimiento(jugador=para, balance=-precio, detalles=detalles)
