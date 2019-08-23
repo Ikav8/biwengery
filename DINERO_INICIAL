@@ -1,0 +1,11 @@
+movis_iniciales = [
+    movs.movimiento(jugador='Alberteam', balance=19700000, detalles='INICIAL'),
+    movs.movimiento(jugador='Dani8', balance=19690000, detalles='INICIAL'),
+    movs.movimiento(jugador='IkaTęām', balance=19640000, detalles='INICIAL'),
+    movs.movimiento(jugador='KBS', balance=19870000, detalles='INICIAL'),
+    movs.movimiento(jugador='Manchica F.C', balance=19700000, detalles='INICIAL'),
+    movs.movimiento(jugador='Persy', balance=19720000, detalles='INICIAL'),
+    movs.movimiento(jugador='RNP_Team', balance=19750000, detalles='INICIAL'),
+    movs.movimiento(jugador="Rubio's team", balance=19630000, detalles='INICIAL'),
+    movs.movimiento(jugador='YoyoTeam', balance=19690000, detalles='INICIAL')
+]

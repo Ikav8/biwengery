@@ -3,7 +3,7 @@ import bs4
 class movimiento:
     def __init__(self, jugador, balance, detalles):
         self.jugador = jugador
-        self.balance = balance
+        self.balance = int(balance)
         self.detalles = detalles
 
     def __str__(self):
@@ -14,6 +14,11 @@ class movimiento:
         signo = '+' if self.balance > 0 else '-'
         return ("[" + signo + "] " + self.jugador + " [ " + str(self.balance) + " ] (" + self.detalles + ").")
 
+    def to_dict(self):
+        return {
+            'jugador' : self.jugador,
+            'balance' : self.balance
+        }
 
 def procesar_html_con_movimientos(html_txt):
     bs = bs4.BeautifulSoup(html_txt, 'html.parser')
@@ -52,6 +57,8 @@ def procesar_fichaje_o_venta(player_card):
         return False
     elif 'ha pagado la' in player_card_txt: # jugador a jugador (clausula)
         movimientos = movimientos + jugador_a_jugador_clausula(player_card)
+    elif 'Cedido de' in player_card_txt: # jugador a jugador (cesion)
+        movimientos = movimientos + jugador_a_jugador_cesion(player_card)
     elif len(player_card.find_all('user-link')) == 2:  # jugador a jugador
         movimientos = movimientos + jugador_a_jugador(player_card)
     elif 'Vendido por' in player_card_txt:  # jugador a mercado
@@ -68,7 +75,7 @@ def jugador_a_jugador(player_tag):
     jugador = player_tag.find('span').text.strip()
     precio_txt = player_tag.find('strong').text.replace(u'\xa0', u' ')
     precio = int(precio_txt.split(' ')[0].replace('.', ''))
-    equipo = player_tag.find('a')['title'].strip()
+    equipo = player_tag.find('a').get('title', '?').strip()
     de = dynamic_expression_container.find_all('user-link')[0].text.strip()
     para = dynamic_expression_container.find_all('user-link')[1].text.strip()
     detalles = equipo + " - " + jugador + "(" + posicion + "): " + de + " -> " + para + " (" + precio_txt + ")"
@@ -86,6 +93,20 @@ def jugador_a_jugador_clausula(player_tag):
     de = dynamic_expression_container.find_all('user-link')[1].text.strip()
     para = dynamic_expression_container.find_all('user-link')[0].text.strip()
     detalles = equipo + " - " + jugador + "(" + posicion + "): " + de + " -> " + para + " (" + precio_txt + ")"
+    movimiento_jugador_1 = movimiento(jugador=de, balance=precio, detalles=detalles)
+    movimiento_jugador_2 = movimiento(jugador=para, balance=-precio, detalles=detalles)
+    return ([movimiento_jugador_1, movimiento_jugador_2])
+
+def jugador_a_jugador_cesion(player_tag):
+    dynamic_expression_container = player_tag.find('dynamic-expression-container')
+    posicion = player_tag.find('player-position').text.strip()
+    jugador = player_tag.find('span').text.strip()
+    precio_txt = player_tag.find_all('strong')[1].text.replace(u'\xa0', u' ')
+    precio = int(precio_txt.split(' ')[0].replace('.', ''))
+    equipo = player_tag.find('a')['title'].strip()
+    de = dynamic_expression_container.find_all('user-link')[0].text.strip()
+    para = dynamic_expression_container.find_all('user-link')[1].text.strip()
+    detalles = equipo + " - " + jugador + "(" + posicion + "): " + de + " ~> " + para + " (" + precio_txt + ") - CESION"
     movimiento_jugador_1 = movimiento(jugador=de, balance=precio, detalles=detalles)
     movimiento_jugador_2 = movimiento(jugador=para, balance=-precio, detalles=detalles)
     return ([movimiento_jugador_1, movimiento_jugador_2])
