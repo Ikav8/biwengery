@@ -34,7 +34,16 @@ def procesar_html_con_movimientos(html_txt):
         movimientos = movimientos + intercambio(offer_exchange_card=offer_exchange_card)
 
     jornadas = bs.find_all(class_="roundFinished")
+    lista_de_jornadas =  []
+    nombres_jornadas_apuntadas = []
     for jornada in jornadas:
+        jornada_nombre = 'Jornada ' + jornada.find('h3').text.split(' ')[-1]
+        if jornada_nombre not in nombres_jornadas_apuntadas:
+            nombres_jornadas_apuntadas.append(jornada_nombre)
+            lista_de_jornadas.append(jornada)
+
+
+    for jornada in lista_de_jornadas:
         movimientos = movimientos + procesar_resultados_jornada(roundFinished=jornada)
     return movimientos
 
@@ -42,9 +51,13 @@ def procesar_resultados_jornada(roundFinished):
     roundFinished_txt = roundFinished.text
     lis = roundFinished.find_all('li')
     jornada = 'Jornada ' + roundFinished.find('h3').text.split(' ')[-1]
+
     movimientos = []
     for li in lis:
-        jugador = li.find('user-link').text
+        user_link = li.find('user-link')
+        if user_link is None:
+            continue
+        jugador = user_link.text
         balance = li.find('increment').text.strip().replace(u'\xa0', u' ').split(' ')[0].replace('.', '')
         detalles = jornada + ' - ' + li.text
         movimientos.append(movimiento(jugador=jugador, balance=balance, detalles=detalles))
@@ -130,7 +143,7 @@ def mercado_a_jugador(player_tag):
     jugador = player_tag.find('span').text.strip()
     precio_txt = player_tag.find('strong').text.replace(u'\xa0', u' ')
     precio = int(precio_txt.split(' ')[0].replace('.', ''))
-    equipo = player_tag.find('a')['title'].strip()
+    equipo = player_tag.find('a').get('title', '?').strip()
     para = dynamic_expression_container.find_all('user-link')[0].text.strip()
     de = 'Mercado'
     detalles = equipo + " - " + jugador + "(" + posicion + "): " + de + " -> " + para + " (" + precio_txt + ")"
